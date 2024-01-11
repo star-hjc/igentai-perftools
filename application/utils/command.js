@@ -1,0 +1,70 @@
+const { app } = require('electron')
+const cp = require('child_process')
+const path = require('path')
+
+module.exports = { shell, exec }
+
+
+async function exec(command, options = { cwd: path.join(app.getAppPath(), '/resources/exec/') }) {
+    return new Promise((resolve, reject) => {
+        cp.exec(command, { ...options }, (err, stdout) => {
+            if (err) {
+                console.error(`cmd:${command}\nerr:${err}}`)
+                return reject(err)
+            }
+            console.info(`cmd:${command}\ndata:${stdout}`)
+            resolve(stdout)
+        })
+    }).catch(() => null)
+}
+
+
+async function shell(command, args, callback, options = { cwd: path.join(app.getAppPath(), '/resources/exec/') }) {
+    return new Promise((resolve, reject) => {
+        const childProcess = cp.spawn(command, args, options)
+        let stdout = ''
+        let stderr = ''
+
+        childProcess.stdout.on('data', data => {
+            callback && callback('data', data)
+            stdout += data.toString()
+        })
+
+        childProcess.stderr.on('data', data => {
+            stderr += data.toString()
+        })
+
+        childProcess.on('error', (err) => {
+            callback && callback('error', err?.message)
+            console.error(`cmd:${command} ${args.join(' ')}\nerr:${err?.message}`)
+            reject({
+                command: `${command} ${args.join(' ')}`,
+                data: null,
+                success: false,
+                message: err?.message
+            })
+        })
+
+        childProcess.on('close', code => {
+
+            if (code !== 0) {
+                console.info(`cmd:${command} ${args.join(' ')}\nerr:${stderr}`)
+                callback && callback('close', stderr)
+                return reject({
+                    command: `${command} ${args.join(' ')}`,
+                    data: stderr,
+                    success: false,
+                    message: stderr
+                })
+
+            }
+            callback && callback('close', code)
+            console.info(`cmd:${command} ${args.join(' ')}\nerr:${stdout.slice(-200)}`)
+            resolve({
+                command: `${command} ${args.join(' ')}`,
+                data: stdout,
+                success: true
+            })
+        })
+    }).catch(res => res)
+}
