@@ -29,7 +29,7 @@ ipcMain.handle('on-adb-packages-event', async (event) => {
 })
 
 ipcMain.handle('on-logcat-cell-event', async (event) => {
-    return await command('adb', ['-s', deviceTemp, 'shell', 'logcat', '-c'])
+    return await command(deviceTemp, ['logcat', '-c'])
 })
 
 ipcMain.handle('on-logcat-event', async (event, folder) => {
@@ -58,16 +58,16 @@ ipcMain.handle('on-adb-command-event', async (event, args, device) => {
 })
 
 
-
-
-ipcMain.handle('on-killmonkey-event', async (event, device) => {
-    const { success, data } = await exec(`adb -s ${device} shell "top -m 100 -n 1 | grep -E 'adbd|monkey'"`)
+ipcMain.handle('on-kill-monkey-event', async (event, device = deviceTemp) => {
+    const deviceStr = device ? `-s ${device} ` : ''
+    const { success, data } = (await exec(`adb ${deviceStr}shell "ps | grep -E 'monkey'"`))
+    console.log(success);
     if (success) {
-        const pids = data.trim().split('\n').map(v => v.split(' ')[0])
+        const pids = data.trim().split('\n').map(v => v.split(/\s+/)[1])
         /** 声明变量结果 */
         let result = []
         for (const pid of pids) {
-            const { success } = await command(device || deviceTemp, ['shell', 'kill', pid])
+            const { success } = await command(device || deviceTemp, ['kill', pid])
             result.push(success)
         }
         return result.includes(false)

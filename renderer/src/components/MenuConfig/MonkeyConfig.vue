@@ -1,23 +1,23 @@
 <template>
     <div class="top">
         <span>日志等级：</span>
-        <a-select v-model="logLevel" size="mini" placeholder="日志等级...">
+        <a-select v-model="state.logLevel" size="mini" placeholder="日志等级...">
             <a-option value="-v" label="简单" />
             <a-option value="-v -v" label="普通" />
             <a-option value="-v -v -v" label="详情" />
         </a-select>
         <span>运行次数：</span>
-        <a-input-number v-model="runNum" :min="1" :max="9999999999" size="mini" placeholder="运行次数..." />
+        <a-input-number v-model="state.runNum" :min="1" :max="9999999999" size="mini" placeholder="运行次数..." />
         <span>间隔时间(ms)：</span>
-        <a-input-number v-model="throttle" :min="0" size="mini" placeholder="间隔时间..." />
+        <a-input-number v-model="state.throttle" :min="0" size="mini" placeholder="间隔时间..." />
         <span>随机种子：</span>
-        <a-input-number v-model="seed" :min="0" size="mini" placeholder="随机种子..." />
+        <a-input-number v-model="state.seed" :min="0" size="mini" placeholder="随机种子..." />
     </div>
     <div class="center">
         <div class="packages">
             <h1>包名</h1>
-            <a-radio-group v-model="packagesSelectState" :options="packagesSelectOptions" size="large" />
-            <a-transfer v-show="packagesSelectState" :data="state.packages" v-model:modelValue="packagesSelect" show-search>
+            <a-radio-group v-model="packagesState" :options="packagesOptions" size="large" />
+            <a-transfer v-show="packagesState" :data="state.packageList" v-model:modelValue="state.packages" show-search>
                 <template #source-title="{ countTotal, countSelected, checked, indeterminate, onSelectAllChange }">
                     <a-checkbox :model-value="checked" :indeterminate="indeterminate" @change="onSelectAllChange">
                         ({{ countSelected }})&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;忽略({{ countTotal }})
@@ -32,36 +32,37 @@
         </div>
         <div class="event">
             <h1>事件</h1>
-            <a-form :model="event">
+            <a-form :model="state.event">
                 <a-form-item label="触摸">
-                    <a-input-number v-model="event.touch" :min="0" :max="100" @blur="onInputEventNum('touch')"
+                    <a-input-number v-model="state.event.touch" :min="0" :max="100" @blur="onInputEventNum('touch')"
                         size="mini" />
                 </a-form-item>
                 <a-form-item label="滑动">
-                    <a-input-number v-model="event.motion" :min="0" :max="100" @blur="onInputEventNum('motion')"
+                    <a-input-number v-model="state.event.motion" :min="0" :max="100" @blur="onInputEventNum('motion')"
                         size="mini" />
                 </a-form-item>
                 <a-form-item label="轨迹球">
-                    <a-input-number v-model="event.trackball" :min="0" :max="100" @blur="onInputEventNum('trackball')"
+                    <a-input-number v-model="state.event.trackball" :min="0" :max="100" @blur="onInputEventNum('trackball')"
                         size="mini" />
                 </a-form-item>
                 <a-form-item label="导航">
-                    <a-input-number v-model="event.nav" :min="0" :max="100" @blur="onInputEventNum('nav')" size="mini" />
+                    <a-input-number v-model="state.event.nav" :min="0" :max="100" @blur="onInputEventNum('nav')"
+                        size="mini" />
                 </a-form-item>
                 <a-form-item label="应用切换">
-                    <a-input-number v-model="event.appswitch" :min="0" :max="100" @blur="onInputEventNum('appswitch')"
+                    <a-input-number v-model="state.event.appswitch" :min="0" :max="100" @blur="onInputEventNum('appswitch')"
                         size="mini" />
                 </a-form-item>
                 <a-form-item label="系统按键">
-                    <a-input-number v-model="event.syskeys" :min="0" :max="100" @blur="onInputEventNum('syskeys')"
+                    <a-input-number v-model="state.event.syskeys" :min="0" :max="100" @blur="onInputEventNum('syskeys')"
                         size="mini" />
                 </a-form-item>
                 <a-form-item label="主要导航">
-                    <a-input-number v-model="event.majornav" :min="0" :max="100" @blur="onInputEventNum('majornav')"
+                    <a-input-number v-model="state.event.majornav" :min="0" :max="100" @blur="onInputEventNum('majornav')"
                         size="mini" />
                 </a-form-item>
                 <a-form-item label="任意事件">
-                    <a-input-number v-model="event.anyevent" :min="0" :max="100" @blur="onInputEventNum('anyevent')"
+                    <a-input-number v-model="state.event.anyevent" :min="0" :max="100" @blur="onInputEventNum('anyevent')"
                         size="mini" />
                 </a-form-item>
             </a-form>
@@ -69,7 +70,7 @@
     </div>
     <div class="option">
         <h1>选项</h1>
-        <a-checkbox-group v-model="ignore">
+        <a-checkbox-group v-model="state.ignore">
             <a-checkbox value="--ignore-crashes">忽略崩溃(不建议)</a-checkbox>
             <a-checkbox value="--ignore-timeouts">忽略超时(不建议)</a-checkbox>
             <a-checkbox value="--ignore-security-exceptions">忽略权限错误(建议)</a-checkbox>
@@ -81,7 +82,7 @@
 
     <div class="log">
         <h1>日志</h1>
-        <a-checkbox-group v-model="logcatConfig">
+        <a-checkbox-group v-model="state.logcatConfig">
             <a-checkbox :value="0">logcat日志</a-checkbox>
             <a-checkbox :value="1">清除monkey之前的日志</a-checkbox>
         </a-checkbox-group>
@@ -91,25 +92,10 @@
         <a-button type="primary" @click="onShowMonkeyCommand">查看命令</a-button>
         <a-button type="primary" @click="onCopyMonkeyCommand">复制命令</a-button>
         <a-button type="primary" :loading="state.run.isRun" @click="onTest">{{ state.run.isRun ? '测试中' : '测试' }}</a-button>
-        <a-button @click="stopMonkey" type="dashed">停止</a-button>
-        <!-- <a-button @click="onRestartDevice">重启设备</a-button>
-        <a-button @click="onOpenLogPath">Monkey日志</a-button>
-        <a-button type="primary" @click="handleClick" :disabled="isRun">设备</a-button> -->
+        <a-button @click="onStopMonkey" type="dashed">停止</a-button>
+        <a-button @click="onShowFilePathPrompt"><icon-save /></a-button>
     </div>
-
-    <!-- <a-modal v-model:visible="visible" @ok="handleOk" :closable="false" hide-cancel>
-        <template #title>
-            连接设备
-        </template>
-        <a-select v-model="selectDevice" :style="{ width: '320px' }" placeholder="选择设备..." @change="onSelectDevices">
-            <a-option v-for="item in state.devices" :key="item.device" :label="item.device" :value="item.device">
-                <div style="width: 200px; display:flex;justify-content: space-between;">
-                    <span style="margin-right: 20px;">{{ item.device }}</span>
-                    <span>{{ item.state }}</span>
-                </div>
-            </a-option>
-        </a-select>
-    </a-modal> -->
+    <FilePathPrompt v-model:visible="isShowFilePathPrompt" name="monkey" @handleOK="onSaveConfig" />
 </template>
   
 <script setup>
@@ -119,80 +105,79 @@ import { useAppStore } from '@/store'
 const appStore = useAppStore()
 const { device } = storeToRefs(appStore)
 
-
-const emits = defineEmits(['handleMonkeyTest'])
-
-const event = reactive({
-    touch: 0,
-    motion: 0,
-    trackball: 0,
-    nav: 0,
-    appswitch: 100,
-    syskeys: 0,
-    majornav: 0,
-    anyevent: 0,
-});
+const emits = defineEmits(['handleRun'])
 
 const state = reactive({
     devices: [],
     device: '',
-    packages: [],
+    packageList: [],
     run: {
         isRun: false,
         runTime: 0,
         endTime: 0
-    }
+    },
+    logLevel: '-v -v -v',
+    runNum: 1,
+    throttle: 100,
+    seed: 100,
+    packages: [],
+    event: {
+        touch: 10,
+        motion: 0,
+        trackball: 0,
+        nav: 0,
+        appswitch: 100,
+        syskeys: 0,
+        majornav: 0,
+        anyevent: 0,
+    },
+    /** 0:开启logcat，1:清除logcat之前的日志 */
+    ignore: ['--ignore-security-exceptions', '--kill-process-after-error', '--monitor-native-crashes'],
+    logcatConfig: [0, 1]
 })
 
-const runNum = ref(1)
-const seed = ref(100)
-const logLevel = ref('-v -v -v')
-const throttle = ref(100)
-const ignore = ref(['--ignore-security-exceptions', '--kill-process-after-error', '--monitor-native-crashes'])
-/** 0:开启logcat，1:清除monkey之前的日志 */
-const logcatConfig = ref([0, 1])
-const packagesSelect = ref([])
-const packagesSelectState = ref(1)
-const packagesSelectOptions = [{ label: '全选', value: 0 }, { label: '选择指定包', value: 1 }]
-
+const packagesState = ref(1)
+const packagesOptions = [{ label: '全选', value: 0 }, { label: '选择指定包', value: 1 }]
 const oldEventNum = ref(0)
-
-const runLog = ref([])
+const isShowFilePathPrompt = ref(false)
 
 onMounted(() => {
     initPackages()
+    initMonkeyConfig()
+    getMonkeyConfig()
 })
+
+
 
 const initPackages = () => {
     adb.packages(device.value).then(v => {
-        state.packages = v.map(v => { return { label: v, value: v } })
+        state.packageList = v.map(v => { return { label: v, value: v } })
     })
 }
 
-
-
-const visible = ref(false);
-
-
-const onOpenLogPath = () => {
-    app.openLogFolder()
+const initMonkeyConfig = () => {
+    const monkeyConfigJSon = localStorage.getItem('monkey')
+    if (!monkeyConfigJSon) return
+    let monkeyConfig = null
+    try {
+        monkeyConfig = JSON.parse(monkeyConfigJSon || {})
+    } catch (error) {
+        console.log(error)
+    }
+    onUseConfig(monkeyConfig)
 }
 
-const stopMonkey = () => {
-    console.log(packagesSelectState.value);
-    // adb.stopMonkey(device.value).then(res => {
-    //     Message.info('已发停止Monkey指令！')
-    // })
+
+
+const onStopMonkey = async () => {
+    const results = await monkey.kill() 
+    Message[results ? 'success' : 'error'](`设备${device.value} Monkey停止${results ? '成功' : '失败'}...`)
 }
 
 const onInputEventNum = (key) => {
-    const eventNum = Object.values(event).reduce((a, b) => (a || 0) + (b || 0), 0)
+    const eventNum = Object.values(state.event).reduce((a, b) => (a || 0) + (b || 0), 0)
     if (eventNum > 100) {
-        event[key] = 100 - oldEventNum.value
-        console.log(event[key]);
-        oldEventNum.value = 100
-    } else {
-        oldEventNum.value = eventNum
+        state.event[key] += 100 - eventNum
     }
 }
 
@@ -207,12 +192,45 @@ const onRestartDevice = () => {
     })
 }
 
+const onShowFilePathPrompt = () => {
+    isShowFilePathPrompt.value = true
+}
+
+const packagesCellErrorItem = () => {
+    state.packages.forEach((item, i) => {
+        console.log(state.packageList.map(v => v.value).includes(item));
+        if (!state.packageList.map(v => v.value).includes(item)) state.packages.splice(i, 1)
+    })
+}
+
+const getMonkeyConfig = () => {
+    packagesCellErrorItem()
+    return JSON.stringify(
+        {
+            logLevel: state.logLevel,
+            runNum: state.runNum,
+            throttle: state.throttle,
+            seed: state.seed,
+            event: state.event,
+            packages: state.packages,
+            ignore: state.ignore,
+            logcatConfig: state.logcatConfig
+        },
+        null, '\t'
+    )
+}
+
+const onSaveConfig = (file) => {
+    isShowFilePathPrompt.value = false
+    fs.writeFile(fs.pathJoin(file.path, `${file.name}.json`), getMonkeyConfig())
+}
+
 
 const createMonkeyCommand = () => {
-    const packagesStr = packagesSelectState.value ? packagesSelect.value.map(v => `-p ${v}`).join(' ') : ''
-    const eventStr = Object.entries(event).filter(v => v[1]).map(([key, value]) => `--pct-${key} ${Math.min(Number(value), 100)}`).join(' ')
-    const ignoreStr = ignore.value.join(' ')
-    return `adb -s ${device.value} shell monkey ${packagesStr} --throttle ${throttle.value} ${eventStr} ${logLevel.value} ${runNum.value} ${ignoreStr}`
+    const packagesStr = packagesState.value ? state.packages.map(v => `-p ${v}`).join(' ') : ''
+    const eventStr = Object.entries(state.event).filter(v => v[1]).map(([key, value]) => `--pct-${key} ${Math.min(Number(value), 100)}`).join(' ')
+    const ignoreStr = state.ignore.join(' ')
+    return `adb -s ${device.value} shell monkey ${packagesStr} -s ${state.seed} --throttle ${state.throttle} ${eventStr} ${state.logLevel} ${state.runNum} ${ignoreStr}`
 }
 
 
@@ -234,6 +252,15 @@ const onCopyMonkeyCommand = () => {
     navigator.clipboard.writeText(createMonkeyCommand())
 }
 
+const onUseConfig = (config) => {
+    console.log(1);
+    for (const [key, value] of Object.entries(config)) {
+        state[key] = value
+    }
+    packagesCellErrorItem()
+    localStorage.setItem('monkey', JSON.stringify(config))
+}
+
 
 const onTest = async () => {
     if (state.run.isRun || getIsRunSleep()) return
@@ -243,13 +270,14 @@ const onTest = async () => {
     await fs.createLogFolder(FolderName)
     const command = createMonkeyCommand()
     console.log(command);
-    if (logcatConfig.value.includes(1)) logcat.cell(device.value)
+    if (state.logcatConfig.includes(1)) logcat.cell(device.value)
     const pid = await monkey.exec(command, FolderName)
     let logcatPid = null;
-    if (logcatConfig.value.includes(0)) {
+    if (state.logcatConfig.includes(0)) {
         logcatPid = await logcat.exec(FolderName)
     }
-    emits('handleMonkeyTest')
+    localStorage.setItem('monkey', getMonkeyConfig())
+    emits('handleRun')
     monkey.end(async (runState, data) => {
         if (!getIsRunSleep()) state.run.isRun = false
         setTimeout(() => {
@@ -258,8 +286,8 @@ const onTest = async () => {
     })
 }
 
+defineExpose({ onUseConfig })
 </script>
-  
 <style lang="less" scoped>
 .top {
     span {
@@ -289,8 +317,12 @@ const onTest = async () => {
         overflow: hidden;
 
         .arco-transfer-view {
-            width: 600px;
-            height: 350px;
+            width: 100%;
+            height: 360px;
+        }
+
+        .arco-checkbox-label {
+            user-select: all;
         }
     }
 

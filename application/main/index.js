@@ -1,9 +1,11 @@
 const { app, BrowserWindow } = require('electron')
 const { createMainWindow } = require('./initApplication')
+// const Store = require('electron-store');
 const initController = require('../controller');
 
 
 
+// Store.initRenderer()
 
 app.whenReady().then(async () => {
     createMainWindow()

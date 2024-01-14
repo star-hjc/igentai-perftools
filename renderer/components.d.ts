@@ -7,13 +7,13 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    CpuChart: typeof import('./src/components/CpuChart.vue')['default']
-    CpuChat: typeof import('./src/components/CpuChart/index.vue')['default']
+    CpuChart: typeof import('./src/components/CpuChart/index.vue')['default']
     CpuConfig: typeof import('./src/components/MenuConfig/CpuConfig.vue')['default']
+    FilePathPrompt: typeof import('./src/components/PromptModel/FilePathPrompt.vue')['default']
     IconContentLayout: typeof import('./src/components/IconContentLayout/index.vue')['default']
-    IconLayout: typeof import('./src/components/IconLayout/index.vue')['default']
     MonkeyConfig: typeof import('./src/components/MenuConfig/MonkeyConfig.vue')['default']
-    MonkeyOption: typeof import('./src/components/MonkeyOption.vue')['default']
+    MonkeyOption: typeof import('./src/components/MonkeyOption/index.vue')['default']
+    PromptModel: typeof import('./src/components/PromptModel/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }

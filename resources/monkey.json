@@ -1,3 +1,32 @@
 {
-    "key": "monkey"
+	"logLevel": "-v",
+	"runNum": 1,
+	"throttle": 1,
+	"seed": 1,
+	"event": {
+		"touch": 1,
+		"motion": 1,
+		"trackball": 1,
+		"nav": 1,
+		"appswitch": 1,
+		"syskeys": 1,
+		"majornav": 1,
+		"anyevent": 1
+	},
+	"packages": [
+		"com.github.uiautomator111",
+		"com.miui.contentextension"
+	],
+	"ignore": [
+		"--ignore-security-exceptions",
+		"--kill-process-after-error",
+		"--monitor-native-crashes",
+		"--ignore-crashes",
+		"--ignore-timeouts",
+		"--hprof"
+	],
+	"logcatConfig": [
+		0,
+		1
+	]
 }

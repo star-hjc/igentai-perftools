@@ -7,15 +7,22 @@ module.exports = { shell, exec, commandCall }
 
 async function exec(command, options = { cwd: path.join(app.getAppPath(), '/resources/exec/') }) {
     return new Promise((resolve, reject) => {
-        cp.exec(command, { ...options }, (err, stdout) => {
+        cp.exec(command, { ...options }, (err, stdout, stderr) => {
             if (err) {
-                console.error(`cmd:${command}\nerr:${err}}`)
-                return reject(err)
+                console.error(`cmd:${command}\nerr:${stderr || err.message}}`)
+                return reject({
+                    success: false,
+                    data: stderr,
+                    message: err.message
+                })
             }
             console.info(`cmd:${command}\ndata:${stdout}`)
-            resolve(stdout)
+            resolve({
+                success: true,
+                data: stdout
+            })
         })
-    }).catch(() => null)
+    }).catch((err) => err)
 }
 
 

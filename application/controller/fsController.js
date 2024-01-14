@@ -1,9 +1,13 @@
 const { app, ipcMain, dialog, shell } = require('electron')
 const fs = require('fs')
 const path = require('path')
-const { resources } = require('../config/settings')
-const { createFolderSync, getFolderPath } = require('../utils/file')
+const { log, resources } = require('../config/settings')
+const { createFolderSync, getFolderPath, readFileSync, writeFileSync } = require('../utils/file')
 
+
+ipcMain.handle('on-get-resources-folder-event', async () => {
+    return resources.path
+})
 
 ipcMain.handle('on-create-log-folder-event', async (event, folderName) => {
     return createFolderSync(log.path, folderName)
@@ -26,6 +30,15 @@ ipcMain.handle('on-show-open-dialog-event', async (event, options = {}) => {
         ],
         ...options
     })
+})
+
+ipcMain.handle('on-read-file-event', async (event, filePath, options) => {
+    return readFileSync(filePath, options)
+})
+
+
+ipcMain.handle('on-write-file-event', async (event, filePath, data, cover) => {
+    return writeFileSync(filePath, data, cover)
 })
 
 module.exports = () => {

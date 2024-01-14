@@ -1,12 +1,11 @@
 const { app, BrowserWindow, Tray, Menu, } = require('electron')
 const electronLog = require('electron-log');
-const Store = require('electron-store');
 const dayjs = require('dayjs')
 const path = require('path')
 
 const { existsSync, mkdirSync, renameSync } = require('fs');
 const { log } = require('../config/settings')
-const { appStore } = require('../store')
+// const { appStore } = require('../store')
 const MenuConfig = require('./menu')
 
 
@@ -25,8 +24,7 @@ function initApplication() {
 
 
 function initStore() {
-    Store.initRenderer()
-    appStore.set({})
+    // appStore.set({})
 }
 
 
@@ -49,7 +47,6 @@ function createMainWindow() {
         /** 隐藏菜单 */
         width: 850,
         height: 830,
-        // frame: false,
         webPreferences: {
             preload: path.join(app.getAppPath(), '/application/preload/index.js'),
             nodeIntegration: true
@@ -70,8 +67,7 @@ function createMainWindow() {
     win.webContents.openDevTools()
 
     win.on('ready-to-show', () => {
-        // console.log(1,Menu.getApplicationMenu());
-        // win.maximize();
+        win.maximize();
     });
     Menu.setApplicationMenu(MenuConfig);
     createWindowTray(win, icon)

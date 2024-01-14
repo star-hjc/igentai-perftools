@@ -156,15 +156,22 @@ function renameFileSync(filePath, fileNameOrNewPath, move = false) {
  * @param {String} filePath 文件路径
  * @returns
  */
-function readFileSync(filePath) {
+function readFileSync(filePath, options = {}) {
     return new Promise((resolve, reject) => {
-        fs.readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
+        fs.readFile(filePath, { encoding: 'utf-8', ...options }, (err, data) => {
             if (err) return reject('读取错误...')
             resolve(data)
         })
     })
 }
 
+/**
+ * 写入文件
+ * @param {String} filePath 
+ * @param {Object} data 
+ * @param {Boolean} cover  如果文件路径存在是否覆盖 默认覆盖(false)
+ * @returns 
+ */
 function writeFileSync(filePath, data, cover = false) {
     try {
         if (fs.existsSync(filePath) && cover) {

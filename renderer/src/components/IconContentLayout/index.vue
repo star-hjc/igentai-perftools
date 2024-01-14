@@ -3,8 +3,7 @@
   <div class="icon-layout">
     <slot name="before" />
     <a-tooltip v-if="content" :content="content" >
-      <component :is="icon"   @click="onIconClick" />
-      <icon-settings />
+      <component :is="icon" :size="size" :color="color"  @click="onIconClick" />
     </a-tooltip>
     <component v-else :is="icon" :size="size" :color="color" @click="onIconClick"/>
     <slot />
@@ -13,7 +12,7 @@
 
 <script setup>
 defineOptions({ name: 'IconContentLayout' })
-const emits = defineEmits(['onIconClick'])
+const emits = defineEmits(['handleIconClick'])
 defineProps({
   icon: {
     type: String,
@@ -34,7 +33,7 @@ defineProps({
 })
 
 function onIconClick() {
-  emits('onIconClick')
+  emits('handleIconClick')
 }
 </script>
 
@@ -43,7 +42,7 @@ function onIconClick() {
   display: inline-flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
-
 }
 </style>

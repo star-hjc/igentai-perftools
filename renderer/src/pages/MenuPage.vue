@@ -1,8 +1,8 @@
 <template>
     <div class="devices">
         执行设备：
-        <a-select placeholder="选择安卓设备" :loading="state.device.isGetDevices" @PopupVisibleChange="getAndroidDebugDevices"
-            @change="onSelectDevice">
+        <a-select placeholder="选择安卓设备" v-model="state.device.id" :loading="state.device.isGetDevices"
+            @PopupVisibleChange="getAndroidDebugDevices" @change="onSelectDevice">
             <a-option v-for="item in state.device.devices" :value="item.device" :label="item.device">
                 <div style="width: 200px; display:flex;justify-content: space-between;">
                     <span style="margin-right: 20px;">{{ item.device }}</span>
@@ -74,6 +74,7 @@ const emit = defineEmits(['handleConfig', 'handleSelectDevice']);
 
 const state = reactive({
     device: {
+        id: '',
         devices: [],
         isGetDevices: false
     },
@@ -88,13 +89,34 @@ onMounted(() => {
 const getAndroidDebugDevices = async () => {
     state.device.isGetDevices = true
     state.device.devices = await adb.devices()
+    /** 找到状态为 “device” 的第一个设备  */
+    const { device } = state.device.devices?.find(v => v.state === 'device') || {}
+    if (device) {
+        state.device.id = device
+        onSelectDevice(device)
+    }
     state.device.isGetDevices = false
+}
+
+
+const setAppTitle = async(device)=>{
+    const regExp = /(.*\().*(\).*)/
+    let title = await app.getTitle()
+    if(regExp.test(title)){
+        title.replace(regExp, `$1${device}$2`)
+    }else{
+        title = `${title}(${device})`
+    }
+    await app.setTitle(title)
 }
 
 const onSelectDevice = async (device) => {
     if (await adb.init(device)) {
+        /** 缓存设备 */
         appStore.setData({ device })
         emit('handleSelectDevice', device)
+        /** 刷新应用标题 */
+        await setAppTitle(device)
         Message.success(`初始化设备：${device} 成功`)
         return
     }

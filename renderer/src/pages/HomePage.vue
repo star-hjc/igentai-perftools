@@ -27,13 +27,13 @@
     <!-- 配置模块 -->
     <a-modal width="auto" v-model:visible="state.configModel.visible">
         <template #title>
-            <IconContentLayout content="1111" icon="icon-settings">
+            <IconContentLayout :content="`选择${state.configModel.title}文件`" icon="icon-settings" @click="onSelectConfigFile">
                 <template #before>
                     {{ state.configModel.title }}
                 </template>
             </IconContentLayout>
         </template>
-        <component :is="state.configModel.component" @handleMonkeyTest="onMonkeyTest" />
+        <component :is="state.configModel.component" ref="configModalRef" @handleRun="onMonkeyTest" />
     </a-modal>
 </template>
 
@@ -53,6 +53,8 @@ const state = reactive({
     }
 })
 
+const configModalRef = ref(null)
+
 
 const onMonkeyTest = () => {
     logTabRef.value.registerMonkeyTerminal()
@@ -63,6 +65,19 @@ const onConfig = (option, id) => {
     const { label, component } = option.find(v => v.id === id) || {}
     state.configModel.title = label
     state.configModel.component = component
+}
+
+const onSelectConfigFile = async () => {
+    const { filePaths: [filePath] } = await fs.openFolderDialog()
+    if (!filePath) return
+    const configJson = await fs.readFile(filePath)
+    let configObject = null
+    try {
+        configObject = JSON.parse(configJson)
+    } catch (error) {
+        Message.error('配置文件不合法，请检测配置文件...')
+    }
+    configModalRef.value?.onUseConfig(configObject)
 }
 
 const onSelectDevice = (device) => {

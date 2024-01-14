@@ -1,0 +1,19 @@
+{
+	"event": {
+		"touch": 0,
+		"motion": 0,
+		"trackball": 0,
+		"nav": 0,
+		"appswitch": 100,
+		"syskeys": 0,
+		"majornav": 0,
+		"anyevent": 0
+	},
+	"runNum": 1,
+	"seed": 100,
+	"ignore": [
+		"--ignore-security-exceptions",
+		"--kill-process-after-error",
+		"--monitor-native-crashes"
+	]
+}

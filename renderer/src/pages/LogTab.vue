@@ -22,6 +22,7 @@
 </template>
 
 <script setup>
+import dayjs from 'dayjs';
 import { Terminal } from 'xterm'
 const monkeyTerminalRef = ref(null)
 const monkeyTerminal = ref(null)
@@ -36,7 +37,6 @@ onMounted(() => {
 
 const createMonkeyTerminal = () => {
     monkeyTerminal.value = new Terminal({ cursorStyle: 'underline', cursorInactiveStyle: 'none', cursorBlink: true, });
-    console.dir(monkeyTerminal.value);
     monkeyTerminal.value.open(monkeyTerminalRef.value.$el.childNodes[0]);
 }
 
@@ -46,6 +46,9 @@ const createMonkeyTerminal = () => {
 function registerMonkeyTerminal() {
     monkey.call((runState, data) => {
         monkeyTerminal.value.write(data);
+    })
+    monkey.end((runState, code) => {
+        monkeyTerminal.value.write(`[${dayjs().format('YYYY-MM-DD HH:mm:ss')}]state: ${code}`);
     })
 }
 
