@@ -18,8 +18,8 @@ async function getDevices() {
     const { data, success } = await adb(['devices'])
     if (!success) return []
     return data.split('\r\n')?.filter(v => v.indexOf('\t') !== -1)?.map(v => {
-        const [device_id, device] = v.split('\t')
-        return { device_id, device }
+        const [device, state] = v.split('\t')
+        return { device, state }
     })
 }
 
@@ -109,7 +109,7 @@ class AUTOClient {
     async getPackagesList() {
         const { data, success } = await command(this.device, ['pm', 'list', 'packages'])
         if (!success) return []
-        return data.trim().split('\n').map(v => v.trim().split(':')[1]).filter(v => v !== undefined)
+        return data.replaceAll('package:', '').split('\r\n').filter(v => v)
     }
 
     /** 获取文件夹信息 */

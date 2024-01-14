@@ -1,6 +1,7 @@
 
 const { ipcMain, ipcRenderer, BrowserWindow } = require('electron')
 const initAdbController = require('./adbController')
+const initFsController = require('./fsController')
 
 
 /**
@@ -16,5 +17,6 @@ ipcMain.handle('on-setTitle-event', (event, title) => {
 module.exports = () => {
     console.info("initController start")
     initAdbController()
+    initFsController()
     console.info("initController finish")
 }

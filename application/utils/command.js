@@ -2,7 +2,7 @@ const { app } = require('electron')
 const cp = require('child_process')
 const path = require('path')
 
-module.exports = { shell, exec }
+module.exports = { shell, exec, commandCall }
 
 
 async function exec(command, options = { cwd: path.join(app.getAppPath(), '/resources/exec/') }) {
@@ -16,6 +16,38 @@ async function exec(command, options = { cwd: path.join(app.getAppPath(), '/reso
             resolve(stdout)
         })
     }).catch(() => null)
+}
+
+
+function commandCall(command, args, callback, options = { cwd: path.join(app.getAppPath(), '/resources/exec/') }) {
+    const childProcess = cp.spawn(command, args, options)
+    let stdout = ''
+    let stderr = ''
+
+    childProcess.stdout.on('data', data => {
+        callback && callback('data', data)
+        stdout += data.toString()
+    })
+
+    childProcess.stderr.on('data', data => {
+        stderr += data.toString()
+    })
+
+    childProcess.on('error', (err) => {
+        callback && callback('error', err?.message)
+        console.log(1);
+        console.error(`cmd:${command} ${args.join(' ')}\nerr:${err?.message}`)
+    })
+
+    childProcess.on('close', code => {
+        if (code !== 0) {
+            callback && callback('data', `${stderr}\n`)
+            console.error(`cmd:${command} ${args.join(' ')}\nerr:${stderr}`)
+        }
+        callback && callback('close', code)
+        console.info(`cmd:${command} ${args.join(' ')}\ndata:${stdout.length <= 200 ? stdout : `... ${stdout.slice(-200)}`}`)
+    })
+    return childProcess?.pid || null
 }
 
 
@@ -59,7 +91,7 @@ async function shell(command, args, callback, options = { cwd: path.join(app.get
 
             }
             callback && callback('close', code)
-            console.info(`cmd:${command} ${args.join(' ')}\nerr:${stdout.slice(-200)}`)
+            console.info(`cmd:${command} ${args.join(' ')}\ndata:${stdout.length <= 200 ? stdout : `... ${stdout.slice(-200)}`}`)
             resolve({
                 command: `${command} ${args.join(' ')}`,
                 data: stdout,

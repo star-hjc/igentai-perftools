@@ -1,6 +1,9 @@
 const { ipcMain, ipcRenderer, BrowserWindow } = require('electron')
-
-const { shell, exec } = require('../utils/command')
+const { appendFileSync } = require('fs')
+const path = require('path')
+const cp = require('child_process')
+const { log } = require('../config/settings')
+const { shell, exec, commandCall } = require('../utils/command')
 
 const { AUTOClient, getDevices, command } = require('../utils/adb')
 
@@ -8,24 +11,40 @@ const client = new AUTOClient()
 let deviceTemp = null;
 
 
-ipcMain.handle('on-monkey-event', async (event, args = '', dataStr) => {
+ipcMain.handle('on-monkey-event', async (event, args = '', folder) => {
     const command = args.split(/\s+/)
-    return await shell(command.splice(0, 1)?.[0], command, (state, data) => {
-        event.sender.send('call-monkey-event', state, String(data))
+    const pid = commandCall(command.splice(0, 1)?.[0], command, (state, data) => {
+        if (state === 'close') {
+            event.sender.send('call-monkey-end-event', state, data)
+        } else {
+            event.sender.send('call-monkey-event', state, String(data))
+        }
+        appendFileSync(path.join(log.path, `/${folder}/monkey.log`), `${new Date().toLocaleString()}: ${String(data)}`)
     })
+    return pid
 })
 
-ipcMain.handle('on-logcat-event', async (event, args = '', dataStr) => {
-    const command = args.split(/\s+/)
-    return await shell(command.splice(0, 1)?.[0], command, (state, data) => {
+ipcMain.handle('on-adb-packages-event', async (event) => {
+    return await client.getPackagesList()
+})
+
+ipcMain.handle('on-logcat-cell-event', async (event) => {
+    return await command('adb', ['-s', deviceTemp, 'shell', 'logcat', '-c'])
+})
+
+ipcMain.handle('on-logcat-event', async (event, folder) => {
+    return commandCall('adb', ['-s', deviceTemp, 'shell', 'logcat', '-v', 'time'], (state, data) => {
+        appendFileSync(path.join(log.path, `/${folder}/logcat.log`), `${new Date().toLocaleString()}: ${String(data)}`)
         event.sender.send('call-logcat-event', state, String(data))
     })
 })
 
 
 ipcMain.handle('on-init-adb-event', async (event, device) => {
+    if (!device) return false
     deviceTemp = device
     client.init(device)
+    return true
 })
 
 
@@ -38,9 +57,7 @@ ipcMain.handle('on-adb-command-event', async (event, args, device) => {
     return await command(device || deviceTemp, args)
 })
 
-ipcMain.handle('on-logcat-cell-event', async (event, device) => {
-    return await command(device || deviceTemp, ['logcat', '-c'])
-})
+
 
 
 ipcMain.handle('on-killmonkey-event', async (event, device) => {
@@ -50,7 +67,7 @@ ipcMain.handle('on-killmonkey-event', async (event, device) => {
         /** 声明变量结果 */
         let result = []
         for (const pid of pids) {
-            const {success} = await command(device || deviceTemp, ['shell', 'kill', pid])
+            const { success } = await command(device || deviceTemp, ['shell', 'kill', pid])
             result.push(success)
         }
         return result.includes(false)
@@ -58,6 +75,6 @@ ipcMain.handle('on-killmonkey-event', async (event, device) => {
     return success
 })
 
-module.exports = () =>{
+module.exports = () => {
     console.info("adbController finish")
 }

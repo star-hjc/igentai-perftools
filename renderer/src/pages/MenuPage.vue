@@ -1,9 +1,16 @@
 <template>
     <div class="devices">
         执行设备：
-        <a-select placeholder="Please select ...">
-            <a-option v-for="i in 3">device xxxxxxxxx{{ i }}</a-option>
+        <a-select placeholder="选择安卓设备" :loading="state.device.isGetDevices" @PopupVisibleChange="getAndroidDebugDevices"
+            @change="onSelectDevice">
+            <a-option v-for="item in state.device.devices" :value="item.device" :label="item.device">
+                <div style="width: 200px; display:flex;justify-content: space-between;">
+                    <span style="margin-right: 20px;">{{ item.device }}</span>
+                    <span>{{ item.state }}</span>
+                </div>
+            </a-option>
         </a-select>
+        <hr />
         状态：
         <span class="on">在线</span> / <span class="off">断连</span>
 
@@ -34,14 +41,14 @@
                         indeterminate,
                         onSelectAllChange,
                     }">
-                        <div :style="styleHeader">
+                        <div>
                             忽略 {{ countSelected }}-{{ countTotal }}
                             <a-checkbox :model-value="checked" :indeterminate="indeterminate" @change="onSelectAllChange" />
                         </div>
                     </template>
 
-                    <template #target-title="{ countTotal, countSelected, indeterminate }">
-                        <div :style="styleHeader">
+                    <template #target-title="{ countTotal, countSelected, indeterminate, checked, onSelectAllChange }">
+                        <div>
                             查看 {{ countSelected }}-{{ countTotal }}
                             <a-checkbox :model-value="checked" :indeterminate="indeterminate" @change="onSelectAllChange" />
                         </div>
@@ -60,19 +67,54 @@
 
 <script setup>
 import { Message } from '@arco-design/web-vue';
-const emit = defineEmits(['handleConfig']);
+import { reactive } from 'vue';
+import { useAppStore } from '@/store'
+const appStore = useAppStore()
+const emit = defineEmits(['handleConfig', 'handleSelectDevice']);
+
+const state = reactive({
+    device: {
+        devices: [],
+        isGetDevices: false
+    },
+})
+
+const runNum = ref()
+
+onMounted(() => {
+    if (state.device.devices.length == 0) getAndroidDebugDevices()
+})
+
+const getAndroidDebugDevices = async () => {
+    state.device.isGetDevices = true
+    state.device.devices = await adb.devices()
+    state.device.isGetDevices = false
+}
+
+const onSelectDevice = async (device) => {
+    if (await adb.init(device)) {
+        appStore.setData({ device })
+        emit('handleSelectDevice', device)
+        Message.success(`初始化设备：${device} 成功`)
+        return
+    }
+    return Message.error(`初始化设备：${device} 失败`)
+}
+
+
+
 const allConfig = ref([
-    { id: 0, label: 'UI配置'},
+    { id: 0, label: 'UI配置' },
     { id: 1, label: 'CAN配置' },
-    { id: 2, label: 'CPU配置' },
-    { id: 3, label: 'Monkey配置' }
+    { id: 2, label: 'CPU配置', component: 'CpuConfig' },
+    { id: 3, label: 'Monkey配置', component: 'MonkeyConfig' }
 ])
 const num = ref(0)
 
 
 
 const onConfiog = (id) => {
-    if (id < 2) return Message.warning('该功能待开发...')
+    if (!allConfig.value.find(v => v.id === id)?.component) return Message.warning('该功能待开发...')
     emit('handleConfig', allConfig.value, id)
 }
 
@@ -121,7 +163,10 @@ const onNumClick = () => {
 </script>
 
 <style lang='less' scoped>
-.devices {
+:deep(.devices) {
+    .device-state {
+        margin-left: 50px;
+    }
 
     .on,
     .off {

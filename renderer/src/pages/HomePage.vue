@@ -1,7 +1,7 @@
 <template>
     <a-layout class="home-layout">
         <a-layout-sider class="left-box">
-            <MenuPage @handleConfig="onConfig" />
+            <MenuPage @handleConfig="onConfig" @handleSelectDevice="onSelectDevice" />
         </a-layout-sider>
         <a-layout-content class="right-box">
             <a-layout class="work">
@@ -19,44 +19,54 @@
                     </a-layout-sider>
                 </a-layout-content>
                 <a-layout-sider class="log">
-                    <LogTab />
+                    <LogTab ref="logTabRef" />
                 </a-layout-sider>
             </a-layout>
         </a-layout-content>
     </a-layout>
     <!-- 配置模块 -->
-    <a-modal v-model:visible="state.configModel.visible" :title="state.configModel.title">
-        <component :is="state.configModel.component" />
+    <a-modal width="auto" v-model:visible="state.configModel.visible">
+        <template #title>
+            <IconContentLayout content="1111" icon="icon-settings">
+                <template #before>
+                    {{ state.configModel.title }}
+                </template>
+            </IconContentLayout>
+        </template>
+        <component :is="state.configModel.component" @handleMonkeyTest="onMonkeyTest" />
     </a-modal>
 </template>
 
 <script setup>
 import { reactive } from 'vue'
 import { Modal, Message } from '@arco-design/web-vue';
-import CpuConfig from './config/CpuConfig.vue'
-import MonkeyConfig from './config/MonkeyConfig.vue'
+const logTabRef = ref(null)
 import MenuPage from './MenuPage.vue';
 import LogTab from './LogTab.vue'
 
 const state = reactive({
+    device: '',
     configModel: {
         visible: false,
         title: '...',
-        component:null,
-        components:{
-            0:CpuConfig,
-            1:MonkeyConfig
-        }
+        component: 'div'
     }
 })
 
-const configModelVisible = ref(false)
 
+const onMonkeyTest = () => {
+    logTabRef.value.registerMonkeyTerminal()
+}
 
 const onConfig = (option, id) => {
     state.configModel.visible = true
-    state.configModel.title = option.find(v => v.id === id).label
-    state.configModel.component = state.configModel.components[id]
+    const { label, component } = option.find(v => v.id === id) || {}
+    state.configModel.title = label
+    state.configModel.component = component
+}
+
+const onSelectDevice = (device) => {
+    state.device = device
 }
 
 </script>

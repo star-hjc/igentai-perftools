@@ -32,12 +32,14 @@ function initStore() {
 
 
 function initElectronLog() {
-    /** 验证日志文件夹是否存在 */
+    /** 验证应用日志文件夹是否存在 */
+    if (!existsSync(log.appPath)) mkdirSync(log.appPath)
+    /** 验证功能文件夹是否存在  */
     if (!existsSync(log.path)) mkdirSync(log.path)
     electronLog.transports.file.maxSize = log.maxSize
     electronLog.transports.file.format = log.format
-    electronLog.transports.file.resolvePathFn = () => path.join(log.path, `${dayjs().format('YYYY-MM-DD')}.log`)
-    electronLog.transports.file.archiveLogFn = (file) => renameSync(file.path, path.join(log.path, `${dayjs().format('YYYY-MM-DD_HH_mm_ss')}.log`))
+    electronLog.transports.file.resolvePathFn = () => path.join(log.appPath, `${dayjs().format('YYYY-MM-DD')}.log`)
+    electronLog.transports.file.archiveLogFn = (file) => renameSync(file.path, path.join(log.appPath, `${dayjs().format('YYYY-MM-DD_HH_mm_ss')}.log`))
     Object.assign(console, electronLog.functions);
 }
 
@@ -65,17 +67,19 @@ function createMainWindow() {
         appStore.set(appData)
     })
 
+    win.webContents.openDevTools()
+
     win.on('ready-to-show', () => {
         // console.log(1,Menu.getApplicationMenu());
-        win.maximize();
+        // win.maximize();
     });
     Menu.setApplicationMenu(MenuConfig);
-    createWindowTray(win,icon)
+    createWindowTray(win, icon)
     return win
 }
 
 
-function createWindowTray(win,icon) {
+function createWindowTray(win, icon) {
     const tray = new Tray(icon)
     tray.on('click', () => {
         win.show()

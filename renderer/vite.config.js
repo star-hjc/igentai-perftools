@@ -39,6 +39,6 @@ export default defineConfig({
       '@': `${path.resolve(__dirname, './src')}/`,
     }
   },
-  // server: { hmr: true },
+  server: { hmr: { overlay: false } },
   build: { outDir: '../.out/renderer' }
 })

@@ -7,13 +7,12 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    ABotton: typeof import('@arco-design/web-vue')['Botton']
     CpuChart: typeof import('./src/components/CpuChart.vue')['default']
-    CpuChats: typeof import('./src/components/CpuChats.vue')['default']
-    CPUchats: typeof import('./src/components/CPUchats.vue')['default']
-    CpuConfig: typeof import('./src/components/CpuConfig.vue')['default']
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
-    MonkeyConfig: typeof import('./src/components/MonkeyConfig.vue')['default']
+    CpuChat: typeof import('./src/components/CpuChart/index.vue')['default']
+    CpuConfig: typeof import('./src/components/MenuConfig/CpuConfig.vue')['default']
+    IconContentLayout: typeof import('./src/components/IconContentLayout/index.vue')['default']
+    IconLayout: typeof import('./src/components/IconLayout/index.vue')['default']
+    MonkeyConfig: typeof import('./src/components/MenuConfig/MonkeyConfig.vue')['default']
     MonkeyOption: typeof import('./src/components/MonkeyOption.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
