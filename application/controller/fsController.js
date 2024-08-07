@@ -2,11 +2,19 @@ const { app, ipcMain, dialog, shell } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const { log, resources } = require('../config/settings')
-const { createFolderSync, getFolderPath, readFileSync, writeFileSync } = require('../utils/file')
+const { createFolderSync, getFolderPath, readFileSync, writeFileSync, readdirAllSync } = require('../utils/file')
 
+
+ipcMain.handle('on-get-resources-event', async () => {
+    return resources
+})
 
 ipcMain.handle('on-get-resources-folder-event', async () => {
     return resources.path
+})
+
+ipcMain.handle('on-readdir-all-event', async (event, folderBasePath, notTypes) => {
+    return readdirAllSync(folderBasePath, notTypes)
 })
 
 ipcMain.handle('on-create-log-folder-event', async (event, folderName) => {

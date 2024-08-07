@@ -5,7 +5,7 @@
     <a-tooltip v-if="content" :content="content" >
       <component :is="icon" :size="size" :color="color"  @click="onIconClick" />
     </a-tooltip>
-    <component v-else :is="icon" :size="size" :color="color" @click="onIconClick"/>
+    <component v-else :is="icon" :size="size" :style="{color}" @click="onIconClick"/>
     <slot />
   </div>
 </template>
@@ -17,6 +17,10 @@ defineProps({
   icon: {
     type: String,
     required: true
+  },
+  iconColor:{
+    type: String,
+    default: ''
   },
   content: {
     type: [String, Number],

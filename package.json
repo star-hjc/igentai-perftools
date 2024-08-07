@@ -1,29 +1,36 @@
 {
   "name": "perftools",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.2",
   "type": "commonjs",
   "main": "./application/main/index.js",
   "scripts": {
     "appview": "vite ./renderer",
-    "app": "nodemon --exec electron . --watch ./ --ignore ./renderer --ext .js",
+    "app": "nodemon --exec electron . --watch ./ --ignore ./renderer --ignore ./resources --ext .js",
     "serve": "concurrently -k \"npm run appview\" \"npm run app\"",
     "build": "vite build ./renderer && electron-builder",
     "preview": "vite preview"
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.54.1",
+    "@codemirror/autocomplete": "^6.15.0",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "codemirror": "^6.0.1",
     "dayjs": "^1.11.10",
     "echarts": "^5.4.3",
     "electron-log": "^5.0.3",
+    "electron-store": "^8.1.0",
     "less": "^4.2.0",
     "less-loader": "^11.1.4",
-    "electron-store": "^8.1.0",
     "pinia": "^2.1.7",
+    "sqlite": "^5.1.1",
     "unplugin-auto-import": "^0.17.3",
     "unplugin-vue-components": "^0.26.0",
     "vue": "^3.3.11",
+    "vue-codemirror": "^6.1.1",
     "vue-router": "^4.2.5",
+    "xlsx": "^0.18.5",
     "xterm": "^5.3.0"
   },
   "devDependencies": {
@@ -36,6 +43,8 @@
     "nodemon": "^3.0.2",
     "vite": "^5.0.8"
   },
+
+  
   "build": {
     "appId": "com.igentai.perftools",
     "productName": "perftools",

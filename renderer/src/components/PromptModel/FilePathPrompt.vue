@@ -1,5 +1,5 @@
 <template>
-    <a-modal v-model:visible="visible" @ok="onOk">
+    <a-modal v-model:visible="visible" @ok="onOk" @open="onOpen">
         <template #title>
             {{ title || '文件' }}
         </template>
@@ -47,9 +47,10 @@ const form = reactive({
     path: ''
 });
 
-onMounted(() => {
+
+const onOpen = () => {
     initPrompt()
-})
+}
 
 const onOk = () => {
     emits('handleOK', form)

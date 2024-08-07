@@ -4,6 +4,8 @@ export default defineStore({
     state: () => {
         return {
             device: '',
+            packages:[],
+            selectPackages:[]
         }
     },
     actions: {

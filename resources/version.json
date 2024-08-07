@@ -1,0 +1,72 @@
+[
+	{
+		"type": 1,
+		"description": "空调",
+		"name": "com.igentai.autoairconditioner",
+		"verifyVersion": "1.2.202402181526",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "设置",
+		"name": "com.semisky.autosetting",
+		"verifyVersion": "1.2.202402021046",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "USB升级",
+		"name": "com.igentai.autoupgrade",
+		"verifyVersion": "1.0.202401181727",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "消息中心",
+		"name": "com.cowin.messagecenter",
+		"verifyVersion": "1.0",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "CarLife",
+		"name": "com.cowin.carlife",
+		"verifyVersion": "1.0.20231221175053",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "HiCar",
+		"name": "com.cowin.hicar",
+		"verifyVersion": "1.0.202401261600",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "蓝牙电话",
+		"name": "com.semisky.bluetooth",
+		"verifyVersion": "1.2.3.20240201165517",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "双屏互动",
+		"name": "com.igentai.autodualscreeninteraction",
+		"verifyVersion": "1.3.202401302011",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "AVM",
+		"name": "com.igentai.autoparking",
+		"verifyVersion": "1.0.202401311902",
+		"actualVersion": ""
+	},
+	{
+		"type": 1,
+		"description": "视频",
+		"name": "com.semisky.multimedia",
+		"verifyVersion": "1.0.20240202182317",
+		"actualVersion": ""
+	}
+]

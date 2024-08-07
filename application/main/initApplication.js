@@ -2,10 +2,10 @@ const { app, BrowserWindow, Tray, Menu, } = require('electron')
 const electronLog = require('electron-log');
 const dayjs = require('dayjs')
 const path = require('path')
-
+const Store = require('electron-store');
 const { existsSync, mkdirSync, renameSync } = require('fs');
-const { log } = require('../config/settings')
-// const { appStore } = require('../store')
+const { log, resources: { cpu } } = require('../config/settings')
+const { appStore } = require('../store')
 const MenuConfig = require('./menu')
 
 
@@ -20,11 +20,13 @@ function initApplication() {
     initElectronLog()
     /** 初始状态管理器 */
     initStore()
+    /** 验证CPU文件夹是否存在 */
+    if (!existsSync(cpu.path)) mkdirSync(cpu.path)
 }
 
 
 function initStore() {
-    // appStore.set({})
+    Store.initRenderer()
 }
 
 
@@ -54,22 +56,23 @@ function createMainWindow() {
         title: '性能工具箱',
         icon
     })
+    if (app.isPackaged) {
+        win.loadFile(path.join(__dirname, '../../.out/renderer/index.html'))
+
+    } else {
+        win.loadURL('http://localhost:5173/')
+        win.webContents.openDevTools()
+    }
+
     win.loadURL(app.isPackaged ? `file://${path.join(app.getAppPath(), '/.out/renderer/index.html')}` : `http://localhost:5173/`)
-    const appData = appStore.get()
-    appData[win.id] = { create_time: Date.now() }
-    appStore.set(appData)
+
     win.on('close', async () => {
-        const appData = appStore.get()
-        delete appData[win.id]
-        appStore.set(appData)
     })
-
-    win.webContents.openDevTools()
-
     win.on('ready-to-show', () => {
         win.maximize();
     });
     Menu.setApplicationMenu(MenuConfig);
+
     createWindowTray(win, icon)
     return win
 }

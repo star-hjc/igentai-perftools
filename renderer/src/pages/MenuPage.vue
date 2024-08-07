@@ -2,7 +2,7 @@
     <div class="devices">
         执行设备：
         <a-select placeholder="选择安卓设备" v-model="state.device.id" :loading="state.device.isGetDevices"
-            @PopupVisibleChange="getAndroidDebugDevices" @change="onSelectDevice">
+            @PopupVisibleChange="onShowDeviceSelect" @change="onSelectDevice">
             <a-option v-for="item in state.device.devices" :value="item.device" :label="item.device">
                 <div style="width: 200px; display:flex;justify-content: space-between;">
                     <span style="margin-right: 20px;">{{ item.device }}</span>
@@ -10,66 +10,26 @@
                 </div>
             </a-option>
         </a-select>
-        <hr />
-        状态：
-        <span class="on">在线</span> / <span class="off">断连</span>
-
     </div>
     <div class="exec">
         <a-button type="primary" v-for="item in allConfig" @click="onConfiog(item.id)">{{ item.label }}</a-button>
 
-        <a-button type="primary">重启安卓</a-button>
-        <a-button type="primary">停止monkey</a-button>
+        <!-- <a-button type="primary" @click="onOpenFolderDialog">导入Excel</a-button> -->
+        <input type="file" ref="excelFile" style="display: none;" @change="onImportExcel" accept=".xlx,.xlsx" />
         <a-button type="primary" @click="onNumClick">计数器({{ num }})</a-button>
-    </div>
-    <div>
-        <span>获取进程数量</span>
-        <a-input-number v-model="runNum" :min="1" :max="30" size="mini" placeholder="获取进程数量..." />
-        <span>间隔时间</span>
-        <a-input-number v-model="runNum" :min="1" :max="30" size="mini" placeholder="间隔时间..." />
-        <a-button type="outline" @click="handleClick">进程过滤</a-button>
-        <a-modal width="auto" v-model:visible="visible" @ok="handleOk" @cancel="handleCancel">
-            <template #title>
-                选择进程
-            </template>
-            <div>
-                <a-transfer show-search :data="data" :default-value="value">
-                    <template #source-title="{
-                        countTotal,
-                        countSelected,
-                        checked,
-                        indeterminate,
-                        onSelectAllChange,
-                    }">
-                        <div>
-                            忽略 {{ countSelected }}-{{ countTotal }}
-                            <a-checkbox :model-value="checked" :indeterminate="indeterminate" @change="onSelectAllChange" />
-                        </div>
-                    </template>
-
-                    <template #target-title="{ countTotal, countSelected, indeterminate, checked, onSelectAllChange }">
-                        <div>
-                            查看 {{ countSelected }}-{{ countTotal }}
-                            <a-checkbox :model-value="checked" :indeterminate="indeterminate" @change="onSelectAllChange" />
-                        </div>
-                    </template>
-                </a-transfer>
-            </div>
-        </a-modal>
-    </div>
-    <div>
-        <p> monkey开始时间：xxxx/xx/xx xx:xx:xx</p>
-        <p> monkey结束时间：xxxx/xx/xx xx:xx:xx</p>
-        <p> cpu开始时间：xxxx/xx/xx xx:xx:xx</p>
-        <p> cpu结束时间：xxxx/xx/xx xx:xx:xx</p>
     </div>
 </template>
 
 <script setup>
+import * as xlsx from "xlsx";
 import { Message } from '@arco-design/web-vue';
 import { reactive } from 'vue';
 import { useAppStore } from '@/store'
+
 const appStore = useAppStore()
+
+const excelFile = ref(null)
+
 const emit = defineEmits(['handleConfig', 'handleSelectDevice']);
 
 const state = reactive({
@@ -80,31 +40,39 @@ const state = reactive({
     },
 })
 
-const runNum = ref()
 
 onMounted(() => {
+    app.setAndroidDevice('')
     if (state.device.devices.length == 0) getAndroidDebugDevices()
 })
 
-const getAndroidDebugDevices = async () => {
+const onShowDeviceSelect = (visible) => {
+    /** 下拉框为收起状态不触发 */
+    if (!visible) return
+    getAndroidDebugDevices(false)
+}
+
+const getAndroidDebugDevices = async (isSelectOne = true) => {
     state.device.isGetDevices = true
     state.device.devices = await adb.devices()
-    /** 找到状态为 “device” 的第一个设备  */
-    const { device } = state.device.devices?.find(v => v.state === 'device') || {}
-    if (device) {
-        state.device.id = device
-        onSelectDevice(device)
+    if (isSelectOne) {
+        /** 找到状态为 “device” 的第一个设备  */
+        const { device } = state.device.devices?.find(v => v.state === 'device') || {}
+        if (device) {
+            state.device.id = device
+            onSelectDevice(device)
+        }
     }
     state.device.isGetDevices = false
 }
 
 
-const setAppTitle = async(device)=>{
+const setAppTitle = async (device) => {
     const regExp = /(.*\().*(\).*)/
     let title = await app.getTitle()
-    if(regExp.test(title)){
+    if (regExp.test(title)) {
         title.replace(regExp, `$1${device}$2`)
-    }else{
+    } else {
         title = `${title}(${device})`
     }
     await app.setTitle(title)
@@ -118,6 +86,7 @@ const onSelectDevice = async (device) => {
         /** 刷新应用标题 */
         await setAppTitle(device)
         Message.success(`初始化设备：${device} 成功`)
+        app.setAndroidDevice(device)
         return
     }
     return Message.error(`初始化设备：${device} 失败`)
@@ -126,10 +95,11 @@ const onSelectDevice = async (device) => {
 
 
 const allConfig = ref([
-    { id: 0, label: 'UI配置' },
-    { id: 1, label: 'CAN配置' },
-    { id: 2, label: 'CPU配置', component: 'CpuConfig' },
-    { id: 3, label: 'Monkey配置', component: 'MonkeyConfig' }
+    // { id: 0, label: 'UI配置' },
+    // { id: 1, label: 'CAN配置' },
+    { id: 2, label: 'CPU配置', component: 'CpuConfig', adb: true },
+    { id: 3, label: 'Monkey配置', component: 'MonkeyConfig', adb: true },
+    { id: 4, label: '版本遍历', component: 'VersionConfig', adb: true }
 ])
 const num = ref(0)
 
@@ -137,19 +107,40 @@ const num = ref(0)
 
 const onConfiog = (id) => {
     if (!allConfig.value.find(v => v.id === id)?.component) return Message.warning('该功能待开发...')
+    if (allConfig.value.find(v => v.id === id)?.adb && !state.device.id) return Message.warning('未连接ADB,无法使用该功能...')
     emit('handleConfig', allConfig.value, id)
 }
 
 
+const onOpenFolderDialog = () => {
+    excelFile.value.click()
+}
 
+const onImportExcel = async (event) => {
+    const files = event.target.files
+    const fileReader = new FileReader()
+    fileReader.onload = function (ev) {
+        try {
+            const data = ev.target.result
+            const workbook = xlsx.read(data, { type: 'binary' })
+            const sheetName = workbook.SheetNames[0]
+            console.log(JSON.stringify(xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1})));
+        } catch (e) {
+            console.log(e);
+            console.log('文件类型不正确')
+            return
+        }
+    }
+    fileReader.readAsBinaryString(files[0])
+    // XLSX.read(data, { type: type })
+    // const {filePaths:[path]} = await fs.openFolderDialog({
+    //     filters: [
+    //         { name: 'Excel 表格', extensions: ['xlsx', 'xls'] }
+    //     ],
+    // })
 
-
-
-
-
-
-
-
+    //     console.log(await fs.readFile(path));
+}
 
 
 
@@ -173,12 +164,12 @@ const data = Array(8)
     }));
 
 const onNumClick = () => {
-    const maxNum = 5
+    const maxNum = 20
     num.value++
     if (num.value == maxNum) alert('你是真的无聊...')
     if (num.value > maxNum) {
         document.write('')
-        alert('无聊鬼，死给你看。完蛋了吧。测试数据没了。叫你摸鱼')
+        alert('扑街仔，测试数据没了。叫你摸鱼')
     }
 
 }
@@ -188,22 +179,6 @@ const onNumClick = () => {
 :deep(.devices) {
     .device-state {
         margin-left: 50px;
-    }
-
-    .on,
-    .off {
-        padding: 0px 3px;
-        color: #f3f3f3;
-        border-radius: 5px;
-
-    }
-
-    .on {
-        background-color: rgb(61, 236, 120);
-    }
-
-    .off {
-        background-color: rgb(248, 149, 146);
     }
 }
 

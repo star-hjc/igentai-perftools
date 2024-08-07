@@ -67,8 +67,11 @@ function readdirAllSync(folderBasePath, notTypes = []) {
             return { type: 'folder', title: item, children: readdirAllSync(childrenPath, notTypes), path: childrenPath }
         }
         const { ctime, mtime, birthtime } = fs.statSync(childrenPath)
+        const nameSplit = item.split('.')
+        const type = nameSplit.pop()
         return {
-            type: 'document',
+            name: nameSplit.join(),
+            type: type || 'document',
             title: item,
             path: childrenPath,
             createTime: (birthtime || ctime).toLocaleString(),

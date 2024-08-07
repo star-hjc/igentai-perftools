@@ -36,7 +36,7 @@ async function countAdbServe() {
 
 class AUTOClient {
     constructor(device) {
-        this.device = device
+        this.init(device)
     }
 
     async init(device) {

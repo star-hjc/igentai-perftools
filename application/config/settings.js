@@ -4,7 +4,13 @@ const path = require('path')
 module.exports = {
     /** 静态资源 */
     resources: {
-        path: path.join(process.cwd(), `/resources/`)
+        path: path.join(process.cwd(), `/resources/`),
+        bin: {
+            path: path.join(process.cwd(), `/resources/bin/`),
+        },
+        cpu: {
+            path: path.join(process.cwd(), `/resources/cpu/`),
+        }
     },
     /** 配置日志文件路径*/
     log: {

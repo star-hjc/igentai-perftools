@@ -6,18 +6,18 @@
             </template>
             <!-- <div class="monkey-terminal" ref="monkeyTerminalRef" /> -->
         </a-tab-pane>
-        <a-tab-pane key="2">
+        <!-- <a-tab-pane key="2">
             <template #title>
                 <icon-calendar /> logcat
             </template>
-            logcat - log
+            logcat - log1
         </a-tab-pane>
         <a-tab-pane key="3">
             <template #title>
                 <icon-user /> shell
             </template>
             待开发...
-        </a-tab-pane>
+        </a-tab-pane> -->
     </a-tabs>
 </template>
 
@@ -73,6 +73,7 @@ defineExpose({ registerMonkeyTerminal })
 
         .arco-tabs-pane {
             height: var(--arco-tabs-content-height);
+            display: flex;
         }
 
         .xterm .xterm-viewport {

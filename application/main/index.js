@@ -1,11 +1,8 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, globalShortcut } = require('electron')
 const { createMainWindow } = require('./initApplication')
-// const Store = require('electron-store');
 const initController = require('../controller');
-
-
-
-// Store.initRenderer()
+const Store = require('electron-store');
+const store = new Store()
 
 app.whenReady().then(async () => {
     createMainWindow()
@@ -14,6 +11,7 @@ app.whenReady().then(async () => {
     })
     /** 监听事件注册 */
     initController()
+    store.delete('android_device')
 })
 
 app.on('window-all-closed', function (event) {
@@ -21,4 +19,15 @@ app.on('window-all-closed', function (event) {
 })
 
 
+app.on('ready', () => {
+    // 注册快捷键
+    globalShortcut.register('CommandOrControl+R', () => {
+        // 取消默认事件
+        return false;
+    });
+    // globalShortcut.register('alt+q', () => {
+    //     // 取消默认事件
+    //     return false;
+    // });
+});
 

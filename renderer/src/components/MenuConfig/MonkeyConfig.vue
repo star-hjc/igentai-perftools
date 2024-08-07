@@ -15,9 +15,10 @@
     </div>
     <div class="center">
         <div class="packages">
-            <h1>包名</h1>
-            <a-radio-group v-model="packagesState" :options="packagesOptions" size="large" />
-            <a-transfer v-show="packagesState" :data="state.packageList" v-model:modelValue="state.packages" show-search>
+            <h3>包名</h3>
+            <a-radio-group v-model="state.packagesState" :options="packagesOptions" size="large" />
+            <a-transfer v-show="state.packagesState" :data="state.packageList" v-model:modelValue="state.packages"
+                show-search>
                 <template #source-title="{ countTotal, countSelected, checked, indeterminate, onSelectAllChange }">
                     <a-checkbox :model-value="checked" :indeterminate="indeterminate" @change="onSelectAllChange">
                         ({{ countSelected }})&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;忽略({{ countTotal }})
@@ -31,7 +32,7 @@
             </a-transfer>
         </div>
         <div class="event">
-            <h1>事件</h1>
+            <h3>事件</h3>
             <a-form :model="state.event">
                 <a-form-item label="触摸">
                     <a-input-number v-model="state.event.touch" :min="0" :max="100" @blur="onInputEventNum('touch')"
@@ -69,7 +70,7 @@
         </div>
     </div>
     <div class="option">
-        <h1>选项</h1>
+        <h3>选项</h3>
         <a-checkbox-group v-model="state.ignore">
             <a-checkbox value="--ignore-crashes">忽略崩溃(不建议)</a-checkbox>
             <a-checkbox value="--ignore-timeouts">忽略超时(不建议)</a-checkbox>
@@ -81,7 +82,7 @@
     </div>
 
     <div class="log">
-        <h1>日志</h1>
+        <h3>日志</h3>
         <a-checkbox-group v-model="state.logcatConfig">
             <a-checkbox :value="0">logcat日志</a-checkbox>
             <a-checkbox :value="1">清除monkey之前的日志</a-checkbox>
@@ -117,26 +118,26 @@ const state = reactive({
         endTime: 0
     },
     logLevel: '-v -v -v',
-    runNum: 1,
-    throttle: 100,
+    runNum: 20000,
+    throttle: 1000,
     seed: 100,
     packages: [],
     event: {
-        touch: 10,
-        motion: 0,
+        touch: 70,
+        motion: 20,
         trackball: 0,
         nav: 0,
-        appswitch: 100,
+        appswitch: 10,
         syskeys: 0,
         majornav: 0,
         anyevent: 0,
     },
+    packagesState: 1,
     /** 0:开启logcat，1:清除logcat之前的日志 */
     ignore: ['--ignore-security-exceptions', '--kill-process-after-error', '--monitor-native-crashes'],
     logcatConfig: [0, 1]
 })
 
-const packagesState = ref(1)
 const packagesOptions = [{ label: '全选', value: 0 }, { label: '选择指定包', value: 1 }]
 const oldEventNum = ref(0)
 const isShowFilePathPrompt = ref(false)
@@ -170,7 +171,7 @@ const initMonkeyConfig = () => {
 
 
 const onStopMonkey = async () => {
-    const results = await monkey.kill() 
+    const results = await monkey.kill()
     Message[results ? 'success' : 'error'](`设备${device.value} Monkey停止${results ? '成功' : '失败'}...`)
 }
 
@@ -198,7 +199,6 @@ const onShowFilePathPrompt = () => {
 
 const packagesCellErrorItem = () => {
     state.packages.forEach((item, i) => {
-        console.log(state.packageList.map(v => v.value).includes(item));
         if (!state.packageList.map(v => v.value).includes(item)) state.packages.splice(i, 1)
     })
 }
@@ -227,7 +227,7 @@ const onSaveConfig = (file) => {
 
 
 const createMonkeyCommand = () => {
-    const packagesStr = packagesState.value ? state.packages.map(v => `-p ${v}`).join(' ') : ''
+    const packagesStr = state.packagesState ? state.packages.map(v => `-p ${v}`).join(' ') : ''
     const eventStr = Object.entries(state.event).filter(v => v[1]).map(([key, value]) => `--pct-${key} ${Math.min(Number(value), 100)}`).join(' ')
     const ignoreStr = state.ignore.join(' ')
     return `adb -s ${device.value} shell monkey ${packagesStr} -s ${state.seed} --throttle ${state.throttle} ${eventStr} ${state.logLevel} ${state.runNum} ${ignoreStr}`
@@ -253,7 +253,6 @@ const onCopyMonkeyCommand = () => {
 }
 
 const onUseConfig = (config) => {
-    console.log(1);
     for (const [key, value] of Object.entries(config)) {
         state[key] = value
     }
@@ -266,10 +265,9 @@ const onTest = async () => {
     if (state.run.isRun || getIsRunSleep()) return
     state.run.isRun = true
     state.run.runTime = new Date()
-    const FolderName = `${device.value}-${dayjs().format('MMDDHHmmss')}`
+    const FolderName = `${device.value}-${dayjs().format('MMDDHHmmss')}`.replace(/:|\\|\/|\*|\?|\"|\<|\>|\|/g, '-')
     await fs.createLogFolder(FolderName)
     const command = createMonkeyCommand()
-    console.log(command);
     if (state.logcatConfig.includes(1)) logcat.cell(device.value)
     const pid = await monkey.exec(command, FolderName)
     let logcatPid = null;
@@ -280,7 +278,10 @@ const onTest = async () => {
     emits('handleRun')
     monkey.end(async (runState, data) => {
         if (!getIsRunSleep()) state.run.isRun = false
-        setTimeout(() => {
+        setTimeout(async () => {
+            console.log(await adb.getDataANR(device.value, FolderName));
+            console.log(await adb.getDataTombstones(device.value, FolderName));
+            adb.getBugreport(device.value, FolderName)
             state.run.isRun = false
         }, getRunSleep())
     })
@@ -350,4 +351,3 @@ defineExpose({ onUseConfig })
     padding: 0 20px;
 }
 </style>
-  

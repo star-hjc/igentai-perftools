@@ -14,7 +14,4 @@ app.use(ArcoVueIcon)
 app.use(router)
 /** 状态管理器 - Pinia */
 app.use(store)
-
-
-
 app.mount('#app')

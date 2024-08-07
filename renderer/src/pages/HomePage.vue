@@ -6,15 +6,20 @@
         <a-layout-content class="right-box">
             <a-layout class="work">
                 <a-layout-content class="chart">
-                    <a-layout-sider class="chart-left">
-                        <CpuChart title="进程" />
-                    </a-layout-sider>
-                    <a-layout-sider class="chart-right">
-                        <div class="cpu-rate">
-                            <CpuChart title="CPU总占用率" />
+                    <a-layout-sider class="chart-box">
+                        <div class="top">
+                            <ProcessChart ref="processRef" title="进程" />
                         </div>
-                        <div class="memory">
-                            <CpuChart title="内存使用" />
+                        <div class="bottom">
+                            <ProcessMemChart ref="processMemRef" title="进程内存" />
+                        </div>
+                    </a-layout-sider>
+                    <a-layout-sider class="chart-box">
+                        <div class="top">
+                            <CpuChart ref="rateRef" title="CPU总占用率" />
+                        </div>
+                        <div class="bottom">
+                            <MemoryChart ref="memoryRef" title="内存使用" />
                         </div>
                     </a-layout-sider>
                 </a-layout-content>
@@ -27,19 +32,22 @@
     <!-- 配置模块 -->
     <a-modal width="auto" v-model:visible="state.configModel.visible">
         <template #title>
-            <IconContentLayout :content="`选择${state.configModel.title}文件`" icon="icon-settings" @click="onSelectConfigFile">
+            <IconContentLayout :content="`选择${state.configModel.title}文件`" icon="icon-settings"
+                @click="onSelectConfigFile">
                 <template #before>
                     {{ state.configModel.title }}
                 </template>
             </IconContentLayout>
         </template>
-        <component :is="state.configModel.component" ref="configModalRef" @handleRun="onMonkeyTest" />
+        <div>
+            <component :is="state.configModel.component" ref="configModalRef" @handleRun="onMonkeyTest" />
+        </div>
     </a-modal>
 </template>
 
 <script setup>
 import { reactive } from 'vue'
-import { Modal, Message } from '@arco-design/web-vue';
+import { Message } from '@arco-design/web-vue';
 const logTabRef = ref(null)
 import MenuPage from './MenuPage.vue';
 import LogTab from './LogTab.vue'
@@ -53,7 +61,19 @@ const state = reactive({
     }
 })
 
+const processRef = ref(null)
+const rateRef = ref(null)
+const memoryRef = ref(null)
+const processMemRef = ref(null)
 const configModalRef = ref(null)
+const isOpenFolderDialog = ref(false)
+
+cpu.call((top) => {
+    rateRef.value.setOption(top)
+    memoryRef.value.setOption(top)
+    processRef.value.setOption(top)
+    processMemRef.value.setOption(top)
+})
 
 
 const onMonkeyTest = () => {
@@ -68,6 +88,8 @@ const onConfig = (option, id) => {
 }
 
 const onSelectConfigFile = async () => {
+    if (isOpenFolderDialog.value) return
+    isOpenFolderDialog.value = true
     const { filePaths: [filePath] } = await fs.openFolderDialog()
     if (!filePath) return
     const configJson = await fs.readFile(filePath)
@@ -78,6 +100,7 @@ const onSelectConfigFile = async () => {
         Message.error('配置文件不合法，请检测配置文件...')
     }
     configModalRef.value?.onUseConfig(configObject)
+    isOpenFolderDialog.value = false
 }
 
 const onSelectDevice = (device) => {
@@ -145,19 +168,15 @@ const onSelectDevice = (device) => {
             .chart {
                 display: flex;
 
-                .chart-left {
-                    width: 30vw !important;
-                }
-
-                .chart-right {
+                .chart-box {
                     width: 30vw !important;
                     --chart-right-item-height: calc(var(--work-height) / 2);
 
-                    .cpu-rate {
+                    .top {
                         height: var(--chart-right-item-height);
                     }
 
-                    .memory {
+                    .bottom {
                         height: calc(var(--work-height) - var(--chart-right-item-height));
                     }
                 }

@@ -40,5 +40,15 @@ export default defineConfig({
     }
   },
   server: { hmr: { overlay: false } },
-  build: { outDir: '../.out/renderer' }
+  build: {
+    outDir: '../.out/renderer', rollupOptions: {
+      output: {
+        manualChunks(buildFilePath) {
+          if (buildFilePath.indexOf('node_modules')>=0) {
+              return buildFilePath.split('node_modules/')[1].split('/')[0];
+          }
+        }
+      }
+    }
+  }
 })
